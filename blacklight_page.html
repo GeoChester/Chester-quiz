@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Blacklight</title>
+<style>
+  html, body {
+    margin: 0; height: 100%;
+    background: #000;
+    overflow: hidden;
+    touch-action: none;                 /* phones: a finger drag moves the light, it does not scroll the page */
+    -webkit-touch-callout: none;
+    -webkit-user-select: none; user-select: none;
+  }
+
+  /* The hidden text layer. It is always there, but a soft circular mask
+     (set from the script below) lets it show only around the cursor. */
+  #hidden {
+    position: fixed; inset: 0;
+    --x: -999px; --y: -999px; --r: 0px;
+    -webkit-mask-image: radial-gradient(circle var(--r) at var(--x) var(--y),
+        #000 0%, rgba(0,0,0,.85) 45%, rgba(0,0,0,0) 100%);
+            mask-image: radial-gradient(circle var(--r) at var(--x) var(--y),
+        #000 0%, rgba(0,0,0,.85) 45%, rgba(0,0,0,0) 100%);
+    user-select: none; -webkit-user-select: none;
+    pointer-events: none;
+  }
+
+  /* Each piece of hidden text is placed anywhere on the page with left/top. */
+  #hidden .t {
+    position: absolute;
+    white-space: nowrap;
+    font-family: Georgia, "Times New Roman", serif;
+    font-weight: bold;
+    letter-spacing: .04em;
+    transform: translate(-50%, -50%);
+  }
+
+  /* Blacklight colours: violet, cyan, green, magenta, yellow-green */
+  .violet  { color: #b967ff; text-shadow: 0 0 10px #b967ff, 0 0 26px #7a2cff; }
+  .cyan    { color: #3ff3ff; text-shadow: 0 0 10px #3ff3ff, 0 0 26px #00a9ff; }
+  .green   { color: #7dff6a; text-shadow: 0 0 10px #7dff6a, 0 0 26px #1fe05a; }
+  .magenta { color: #ff4fd8; text-shadow: 0 0 10px #ff4fd8, 0 0 26px #d0159f; }
+  .lime    { color: #d4ff3a; text-shadow: 0 0 10px #d4ff3a, 0 0 26px #9bd400; }
+
+  /* Text sizes */
+  .xl { font-size: clamp(34px, 6vw, 78px); }
+  .l  { font-size: clamp(24px, 4vw, 52px); }
+  .m  { font-size: clamp(18px, 2.6vw, 34px); }
+  .s  { font-size: clamp(14px, 1.8vw, 24px); }
+</style>
+</head>
+<body>
+
+<!-- ============ EDIT YOUR HIDDEN TEXT HERE ============
+     left / top are percentages of the page. Colour classes:
+     violet, cyan, green, magenta, lime.  Size classes: xl, l, m, s.
+     Add or remove lines freely. -->
+<div id="hidden">
+  <div class="t violet  xl" style="left:50%; top:30%;">That's the spirit!</div>
+  <div class="t cyan    m"  style="left:50%; top:44%;">Go find it at</div>
+  <div class="t green   l"  style="left:50%; top:58%;">N 38° 52.380</div>
+  <div class="t magenta l"  style="left:50%; top:72%;">W 077° 07.894</div>
+</div>
+
+<script>
+  const layer = document.getElementById("hidden");
+  const RADIUS = 120;          // size of the light, in pixels (make it bigger or smaller)
+  let tx = -999, ty = -999;    // where the cursor is
+  let x = -999, y = -999;      // where the light is (it trails the cursor smoothly)
+  let r = 0, targetR = 0;      // current and target size of the light
+
+  const TOUCH_LIFT = 70;       // on phones the light sits this many pixels above the finger so the finger doesn't cover it
+
+  function show(e) { tx = e.clientX; ty = e.clientY - (e.pointerType === "touch" ? TOUCH_LIFT : 0); targetR = RADIUS;
+                     if (r < 1) { x = tx; y = ty; } }
+  function hide()  { targetR = 0; }
+
+  window.addEventListener("pointermove", show);
+  window.addEventListener("pointerdown", show);
+  window.addEventListener("pointerup", e => { if (e.pointerType !== "mouse") hide(); });
+  window.addEventListener("pointercancel", hide);
+  document.addEventListener("mouseleave", hide);
+  window.addEventListener("blur", hide);
+
+  function frame() {
+    x += (tx - x) * 0.25;                 // small delay gives a "flashlight" feel
+    y += (ty - y) * 0.25;
+    r += (targetR - r) * 0.18;            // light grows in and shrinks away
+    if (r < 0.5 && targetR === 0) r = 0;
+    layer.style.setProperty("--x", x + "px");
+    layer.style.setProperty("--y", y + "px");
+    layer.style.setProperty("--r", r + "px");
+    requestAnimationFrame(frame);
+  }
+  frame();
+</script>
+</body>
+</html>
